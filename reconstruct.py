@@ -51,7 +51,24 @@ class reconstruct:
     def readinFile(self):
         with open(self.inFile,'r') as inputText:
             for line in inputText:
-                self.input += line
+                self.parse(line)
+                
+    def parse(self,line):
+        n = len(line)
+        
+        s = line.lower()
+        
+        D = [[False for x in range(0,n)] for x in range(0,n)]
+       
+        for d in range(0,n):
+            for i in range(0,n-d):
+                j = i+d+1
+                if s[i:j] in self.dictionary:
+                    D[i][j-1] = line[i:j]
+                else:
+                    for k in range(i+1,j-1):
+                        if D[i][k-1] and D[k][j-1]:
+                            D[i][j-1] = line[i:j]
     
 if __name__ == '__main__':
     if len(sys.argv) != 4:
