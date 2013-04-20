@@ -35,8 +35,7 @@ class reconstruct:
         
         newText = self.insertSpaces()
         
-        self.insertNewLines(newText)
-
+        print(self.insertNewLines(newText))
 
     def checkInputs(self):
         if not os.path.exists(self.dictFile):
@@ -93,12 +92,31 @@ class reconstruct:
     
     def insertNewLines(self,text):
         text = text.split('\n')
-        newText = ''
+        final = ''
         for para in text:
+            if not para:
+                continue
+            newText = []
+            cost = 0
             while para:
-                newText += para[:self.margin] + '\n'
-                para = para[self.margin:]
-        print(newText)
+                adjustment = 0
+                current = para[:self.margin]
+                if len(current) == self.margin:
+                    if not current.endswith(' ') and para[self.margin] != ' ':
+                        current = para[:self.margin-adjustment]
+                        while not current.endswith(' '):
+                            adjustment += 1
+                            current = para[:self.margin-adjustment]
+                newText.append(current.strip())
+                para = para[len(current):]
+            for line in newText[:-1]:
+                cost += pow(self.margin-len(line),3)
+            for line in newText:
+                final += line + '\n'
+            final += str(cost)+'\n'
+
+        return final
+
     
 if __name__ == '__main__':
     if len(sys.argv) != 4:
