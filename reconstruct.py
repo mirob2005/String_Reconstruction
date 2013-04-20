@@ -24,6 +24,7 @@ class reconstruct:
 
         self.text = []
         self.dictionary = {}
+        self.longest = 0
         self.breakpoints = []
         
         self.process()
@@ -31,6 +32,7 @@ class reconstruct:
     def process(self):
         self.checkInputs()
         self.readDict()
+        self.checkMargin()
         self.readinFile()
         
         newText = self.insertSpaces()
@@ -52,6 +54,14 @@ class reconstruct:
         with open(self.dictFile,'r') as dictionary:
             for line in dictionary:
                 self.dictionary[line.strip().lower()] = None
+                
+    def checkMargin(self):
+        for key in self.dictionary.keys():
+            if len(key) > self.longest:
+                self.longest = len(key)
+        if self.margin < self.longest:
+            print('Margin size is not acceptable (Longest word is %s characters long)!'%self.longest)
+            exit()
     
     def readinFile(self):
         with open(self.inFile,'r') as inputText:
@@ -97,7 +107,7 @@ class reconstruct:
             if not para:
                 continue
             attempts = {}
-            for reduction in range(self.margin//4):
+            for reduction in range(self.margin-self.longest+1):
                 newText = self.breakLines(para,reduction)
                 cost = 0
                 for line in newText[:-1]:
@@ -121,12 +131,14 @@ class reconstruct:
             adjustment = 0
             current = para[:margin]
             if len(current) == margin:
-                if not current.endswith(' ') and para[margin] != ' ':
-                    current = para[:margin-adjustment]
-                    while not current.endswith(' '):
-                        adjustment += 1
-                        current = para[:self.margin-adjustment]
-            newText.append(current.strip())
+                if len(para) > len(current):
+                    if not current.endswith(' ') and para[margin] != ' ':
+                        current = para[:margin-adjustment]
+                        while not current.endswith(' '):
+                            adjustment += 1
+                            current = para[:self.margin-adjustment]
+            if current.strip():
+                newText.append(current.strip())
             para = para[len(current):]
         return newText
 
