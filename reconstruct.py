@@ -96,26 +96,39 @@ class reconstruct:
         for para in text:
             if not para:
                 continue
-            newText = []
-            cost = 0
-            while para:
-                adjustment = 0
-                current = para[:self.margin]
-                if len(current) == self.margin:
-                    if not current.endswith(' ') and para[self.margin] != ' ':
-                        current = para[:self.margin-adjustment]
-                        while not current.endswith(' '):
-                            adjustment += 1
-                            current = para[:self.margin-adjustment]
-                newText.append(current.strip())
-                para = para[len(current):]
-            for line in newText[:-1]:
-                cost += pow(self.margin-len(line),3)
+            attempts = {}
+            for reduction in range(self.margin//4):
+                newText = self.breakLines(para,reduction)
+                cost = 0
+                for line in newText[:-1]:
+                    cost += pow(self.margin-len(line),3)
+                
+                attempts[cost] = newText
+
+            cost = sorted(attempts.keys())[0]
+            newText = attempts[cost]
+            
             for line in newText:
                 final += line + '\n'
             final += str(cost)+'\n'
 
         return final
+    
+    def breakLines(self,para,reduction):
+        margin = self.margin - reduction
+        newText = []
+        while para:
+            adjustment = 0
+            current = para[:margin]
+            if len(current) == margin:
+                if not current.endswith(' ') and para[margin] != ' ':
+                    current = para[:margin-adjustment]
+                    while not current.endswith(' '):
+                        adjustment += 1
+                        current = para[:self.margin-adjustment]
+            newText.append(current.strip())
+            para = para[len(current):]
+        return newText
 
     
 if __name__ == '__main__':
