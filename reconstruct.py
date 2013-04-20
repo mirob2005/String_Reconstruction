@@ -21,9 +21,10 @@ class reconstruct:
     def __init__(self, inputs):
         self.dictFile, self.inFile = inputs[0:2]
         self.margin = int(inputs[2])
-        
+
+        self.text = []
         self.dictionary = {}
-        self.input = ''
+        self.breakpoints = []
         
         self.process()
 
@@ -31,6 +32,11 @@ class reconstruct:
         self.checkInputs()
         self.readDict()
         self.readinFile()
+        
+        newText = self.insertSpaces()
+        
+        self.insertNewLines(newText)
+
 
     def checkInputs(self):
         if not os.path.exists(self.dictFile):
@@ -51,14 +57,16 @@ class reconstruct:
     def readinFile(self):
         with open(self.inFile,'r') as inputText:
             for line in inputText:
-                self.parse(line)
-                
+                self.text.append(line)
+                self.breakpoints.append(sorted(self.parse(line)))
+
     def parse(self,line):
         n = len(line)
         
         s = line.lower()
         
         D = [[False for x in range(0,n)] for x in range(0,n)]
+        breakpoints = set()
        
         for d in range(0,n):
             for i in range(0,n-d):
@@ -66,9 +74,31 @@ class reconstruct:
                 if s[i:j] in self.dictionary:
                     D[i][j-1] = line[i:j]
                 else:
-                    for k in range(i+1,j-1):
+                    for k in range(i,j):
                         if D[i][k-1] and D[k][j-1]:
                             D[i][j-1] = line[i:j]
+                            breakpoints.add(k)
+                            break
+        return breakpoints
+
+    def insertSpaces(self):
+        text = ''
+        for (paragraph,bp) in zip(self.text,self.breakpoints):
+            past = 0
+            for pt in bp:
+                text += paragraph[past:pt] + ' '
+                past = pt
+            text+= paragraph[past:]
+        return text
+    
+    def insertNewLines(self,text):
+        text = text.split('\n')
+        newText = ''
+        for para in text:
+            while para:
+                newText += para[:self.margin] + '\n'
+                para = para[self.margin:]
+        print(newText)
     
 if __name__ == '__main__':
     if len(sys.argv) != 4:
