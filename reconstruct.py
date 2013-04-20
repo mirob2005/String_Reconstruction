@@ -1,6 +1,6 @@
 #Michael Robertson
 #mirob2005@gmail.com
-#Completed: 4/--/2013
+#Completed: 4/19/2013
 
 # Program takes as input a text file that has had the spaces removed along with
 #   a dictionary file with a list of acceptable words.  A third input is an integer
