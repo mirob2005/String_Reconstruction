@@ -1,6 +1,6 @@
 #Michael Robertson
 #mirob2005@gmail.com
-#Completed: 4/19/2013
+#Completed: 4/20/2013
 
 # Program takes as input a text file that has had the spaces removed along with
 #   a dictionary file with a list of acceptable words.  A third input is an integer
@@ -50,11 +50,13 @@ class reconstruct:
             print('Margin size is not acceptable!')
             exit()
 
+    #Each line contains one word plus a '\n', strip whitesplace and lower case
     def readDict(self):
         with open(self.dictFile,'r') as dictionary:
             for line in dictionary:
                 self.dictionary[line.strip().lower()] = None
-                
+
+    # Check to make sure our margin isn't smaller than our longest word
     def checkMargin(self):
         for key in self.dictionary.keys():
             if len(key) > self.longest:
@@ -69,6 +71,8 @@ class reconstruct:
                 self.text.append(line)
                 self.breakpoints.append(sorted(self.parse(line)))
 
+    # Fills out our table to keep track of what substrings have already been found and which have not
+    # Breakpoints are the indices in the line where a space should be inserted to form words
     def parse(self,line):
         n = len(line)
         
@@ -88,8 +92,26 @@ class reconstruct:
                             D[i][j-1] = line[i:j]
                             breakpoints.add(k)
                             break
+        # This removes extra breakpoints that are found when words are substrings of other words
+        # Example: 'theyouthevent' can be broken into:
+        #   'the youth event' or 'the you the ...'
+        #   Without this check, we get 'the you th event'
+        #   With this check, we get 'the youth event'
+        start = 0
+        past = 0
+        for x in sorted(breakpoints):
+            if not s[start:x] in self.dictionary:
+                if s[past:x] in self.dictionary:
+                    breakpoints.remove(start)
+                    start = x
+                else:
+                    breakpoints.remove(x)
+            else:
+                past = start
+                start = x
         return breakpoints
 
+    # Insert spaces at the word boundaries using breakpoints
     def insertSpaces(self):
         text = ''
         for (paragraph,bp) in zip(self.text,self.breakpoints):
@@ -100,6 +122,7 @@ class reconstruct:
             text+= paragraph[past:]
         return text
     
+    # Insert newlines at the line breaks, calls breakLines() mulitple times to minimize total cost of printing.
     def insertNewLines(self,text):
         text = text.split('\n')
         final = ''
@@ -123,7 +146,14 @@ class reconstruct:
             final += str(cost)+'\n'
 
         return final
-    
+
+    # Uses the margin + reduction (if any) to insert newlines.
+    # The margin width is found, then the line is traced back until a space
+    #   is found (as to not break up words)
+    # Reduction ranges from 0 to (margin - longest word) so that we try
+    #   different formattings. The formatting with the smallest cost is used.
+    # The goal is to have all the lines except the final line be of similar lengths
+    #   due to the cost growing exponentially per space on each line.
     def breakLines(self,para,reduction):
         margin = self.margin - reduction
         newText = []
@@ -134,7 +164,7 @@ class reconstruct:
                 if len(para) > len(current):
                     if not current.endswith(' ') and para[margin] != ' ':
                         current = para[:margin-adjustment]
-                        while not current.endswith(' '):
+                        while current and not current.endswith(' '):
                             adjustment += 1
                             current = para[:self.margin-adjustment]
             if current.strip():
